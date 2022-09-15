@@ -1,6 +1,6 @@
 import subprocess
 
-RUN_CMD = "tp01"
+RUN_CMD = "python tp01.py"
 
 f = open("output.txt", "w")
 c = 1
@@ -11,7 +11,7 @@ for i in range(2, 11):
             print("Attempting:", inp)
 
             p = subprocess.Popen(
-                "tp01",
+                RUN_CMD.split(),
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
             )
