@@ -8,7 +8,7 @@ class MathTokenizer:
     OPERATORS = ("+", "-", "*", "/", "$", "(", ")")
 
     def __init__(self, expr: str):
-        self._expr = list(expr.replace(" ", ""))
+        self._expr = expr
         self._curr_idx = 0
 
     def __iter__(self):
@@ -24,11 +24,11 @@ class MathTokenizer:
         if self._curr_idx == len(self._expr):
             raise StopIteration()
 
-        while valid_token:
-            if self._curr_idx == len(self._expr):
-                break
-
+        while self._curr_idx != len(self._expr) and valid_token:
             curr = self._expr[self._curr_idx]
+            if curr == " ":
+                continue
+
             if curr in self.OPERATORS:
                 if result == "":
                     result += curr
