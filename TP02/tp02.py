@@ -27,6 +27,7 @@ class MathTokenizer:
         while self._curr_idx != len(self._expr) and valid_token:
             curr = self._expr[self._curr_idx]
             if curr == " ":
+                self._curr_idx += 1
                 continue
 
             if curr in self.OPERATORS:
