@@ -135,9 +135,9 @@ class MainWindow(tk.Frame):
         self._expr = tk.StringVar(self)
         self._expr.trace("w", lambda _, __, ___: self.on_change())
 
-        self.infix_lbl = tk.Label(self, text="Ekspresi Infix:")
-        self.postfix_lbl = tk.Label(self, text="Ekspresi Postfix:")
-        self.value_lbl = tk.Label(self, text="Nilai:")
+        self.infix_lbl = tk.Label(self, text="Infix Expression:")
+        self.postfix_lbl = tk.Label(self, text="Postfix Expression:")
+        self.value_lbl = tk.Label(self, text="Value:")
 
         self.infix = tk.Entry(self, textvariable=self._expr)
         self.postfix = tk.Label(self)
