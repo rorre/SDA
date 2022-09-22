@@ -1,5 +1,5 @@
 import tkinter as tk
-from typing import Literal
+from typing import Literal, Optional
 
 PRECEDENCE = {"+": 1, "-": 1, "*": 2, "/": 2, "$": 3, "(": 4, ")": 4}
 
@@ -56,7 +56,7 @@ def eval_math(left: int, right: int, op: str):
         return left**right
 
 
-def parse(expr: str):
+def convert(expr: str) -> tuple[list[str], Optional[str]]:
     op_stack: list[str] = []
     cmds: list[str] = []
 
@@ -74,7 +74,7 @@ def parse(expr: str):
             while last_op != "(":
                 cmds.append(last_op)
                 if len(op_stack) == 0:
-                    raise Exception("Unmatch parantheses")
+                    return cmds, "Missing opening parenthesis"
                 last_op = op_stack.pop()
 
         else:
@@ -96,13 +96,13 @@ def parse(expr: str):
     while len(op_stack) != 0:
         op = op_stack.pop()
         if op == "(":
-            raise Exception("Unmatch parentheses")
+            return cmds, "Missing closing parenthesis"
         cmds.append(op)
 
-    return cmds
+    return cmds, None
 
 
-def evaluate(cmds: list[str]):
+def evaluate(cmds: list[str]) -> tuple[int, Optional[str]]:
     num_stack: list[int] = []
 
     for token in cmds:
@@ -110,16 +110,39 @@ def evaluate(cmds: list[str]):
             num_stack.append(int(token))
             continue
 
+        second = num_stack.pop()
         try:
-            second = num_stack.pop()
             first = num_stack.pop()
         except IndexError:
-            raise Exception("Invalid expression")
+            return second, "Missing operand"
 
         result = eval_math(first, second, token)
         num_stack.append(result)
 
-    return num_stack.pop()
+    return num_stack.pop(), None
+
+
+class BulletLabel(tk.Label):
+    def __init__(self, master, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        text = kwargs.pop("text", "")
+        kwargs["text"] = self.bulletise(text)
+
+    def bulletise(self, text):
+        if len(text) == 0:  # no text so no bullets
+            return ""
+        lines = text.split("\n")
+        parts = []
+        for line in lines:  # for each line
+            parts.extend(
+                ["\u2022", line, "\n"]
+            )  # prepend bullet and re append newline removed by split
+        return "".join(parts)
+
+    def configure(self, *args, **kwargs):
+        text = kwargs.pop("text", "")
+        kwargs["text"] = self.bulletise(text)
+        super().configure(*args, **kwargs)
 
 
 class MainWindow(tk.Frame):
@@ -139,18 +162,22 @@ class MainWindow(tk.Frame):
         self.infix_lbl = tk.Label(self, text="Infix Expression:")
         self.postfix_lbl = tk.Label(self, text="Postfix Expression:")
         self.value_lbl = tk.Label(self, text="Value:")
+        self.error_lbl = tk.Label(self, text="Errors:")
 
         self.infix = tk.Entry(self, textvariable=self._expr)
         self.postfix = tk.Label(self)
         self.value = tk.Label(self)
+        self.errors = BulletLabel(self)
 
         self.infix_lbl.grid(column=0, row=0, padx=5, pady=5, sticky="e")
         self.postfix_lbl.grid(column=0, row=1, padx=5, pady=5, sticky="e")
         self.value_lbl.grid(column=0, row=2, padx=5, pady=5, sticky="e")
+        self.error_lbl.grid(column=0, row=3, padx=5, pady=5, sticky="e")
 
         self.infix.grid(column=1, row=0, padx=5, pady=5, sticky="news")
         self.postfix.grid(column=1, row=1, padx=5, pady=5, sticky="w")
         self.value.grid(column=1, row=2, padx=5, pady=5, sticky="w")
+        self.errors.grid(column=1, row=3, padx=5, pady=5, sticky="w")
 
     def on_change(self):
         expr = self._expr.get()
@@ -159,12 +186,20 @@ class MainWindow(tk.Frame):
             self.value.configure(text="")
             return
 
-        try:
-            expr_cmds = parse(expr)
-            expr_cmds_str = " ".join(expr_cmds)
-            expr_val = evaluate(expr_cmds)
-        except BaseException as e:
-            expr_cmds_str = expr_val = str(e)
+        errors: list[str] = []
+
+        expr_cmds, err = convert(expr)
+        if err:
+            errors.append(err)
+
+        expr_cmds_str = " ".join(expr_cmds)
+
+        expr_val, err = evaluate(expr_cmds)
+        if err:
+            errors.append(err)
+
+        print(errors)
+        self.errors.configure(text="\n".join(errors))
 
         self.postfix.configure(text=expr_cmds_str)
         self.value.configure(text=expr_val)
