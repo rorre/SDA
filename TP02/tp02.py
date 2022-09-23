@@ -116,7 +116,10 @@ def evaluate(cmds: list[str]) -> tuple[int, Optional[str]]:
         except IndexError:
             return second, "Missing operand"
 
-        result = eval_math(first, second, token)
+        try:
+            result = eval_math(first, second, token)
+        except ZeroDivisionError:
+            return first, "Zero division"
         num_stack.append(result)
 
     return num_stack.pop(), None
