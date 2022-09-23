@@ -40,6 +40,9 @@ class MathTokenizer:
                 result += curr
                 self._curr_idx += 1
 
+        if result == "":
+            raise StopIteration()
+
         return (result, "op" if result in self.OPERATORS else "num")
 
 
@@ -172,13 +175,15 @@ class MainWindow(tk.Frame):
         if err:
             errors.append(err)
 
-        expr_cmds_str = " ".join(expr_cmds)
+        if expr_cmds:
+            expr_cmds_str = " ".join(expr_cmds)
+            expr_val, err = evaluate(expr_cmds)
+            if err:
+                errors.append(err)
+        else:
+            expr_cmds_str = ""
+            expr_val = ""
 
-        expr_val, err = evaluate(expr_cmds)
-        if err:
-            errors.append(err)
-
-        print(errors)
         self.errors.configure(text=", ".join(errors))
 
         self.postfix.configure(text=expr_cmds_str)
@@ -188,7 +193,7 @@ class MainWindow(tk.Frame):
 def main():
     app = MainWindow()
     app.master.title("Infix-Postfix Converter")  # type: ignore
-    app.master.geometry("500x100")
+    app.master.geometry("500x200")
     app.mainloop()
 
 
