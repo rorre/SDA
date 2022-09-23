@@ -125,29 +125,6 @@ def evaluate(cmds: list[str]) -> tuple[int, Optional[str]]:
     return num_stack.pop(), None
 
 
-class BulletLabel(tk.Label):
-    def __init__(self, master, *args, **kwargs):
-        super().__init__(master, *args, **kwargs)
-        text = kwargs.pop("text", "")
-        kwargs["text"] = self.bulletise(text)
-
-    def bulletise(self, text):
-        if len(text) == 0:  # no text so no bullets
-            return ""
-        lines = text.split("\n")
-        parts = []
-        for line in lines:  # for each line
-            parts.extend(
-                ["\u2022", line, "\n"]
-            )  # prepend bullet and re append newline removed by split
-        return "".join(parts)
-
-    def configure(self, *args, **kwargs):
-        text = kwargs.pop("text", "")
-        kwargs["text"] = self.bulletise(text)
-        super().configure(*args, **kwargs)
-
-
 class MainWindow(tk.Frame):
     def __init__(self, master: tk.Misc = None):
         super().__init__(master)
@@ -170,7 +147,7 @@ class MainWindow(tk.Frame):
         self.infix = tk.Entry(self, textvariable=self._expr)
         self.postfix = tk.Label(self)
         self.value = tk.Label(self)
-        self.errors = BulletLabel(self)
+        self.errors = tk.Label(self)
 
         self.infix_lbl.grid(column=0, row=0, padx=5, pady=5, sticky="e")
         self.postfix_lbl.grid(column=0, row=1, padx=5, pady=5, sticky="e")
@@ -202,7 +179,7 @@ class MainWindow(tk.Frame):
             errors.append(err)
 
         print(errors)
-        self.errors.configure(text="\n".join(errors))
+        self.errors.configure(text=", ".join(errors))
 
         self.postfix.configure(text=expr_cmds_str)
         self.value.configure(text=expr_val)
