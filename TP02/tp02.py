@@ -3,6 +3,8 @@ from typing import Literal, Optional
 
 PRECEDENCE = {"+": 1, "-": 1, "*": 2, "/": 2, "$": 3, "(": 4, ")": 4}
 
+TokenType = Literal["op", "num", "invalid"]
+
 
 class MathTokenizer:
     OPERATORS = ("+", "-", "*", "/", "$", "(", ")")
@@ -15,10 +17,7 @@ class MathTokenizer:
         self._curr_idx = 0
         return self
 
-    def __next__(self):
-        return self.next_token()
-
-    def next_token(self) -> tuple[str, Literal["op", "num"]]:
+    def __next__(self) -> tuple[str, TokenType]:
         valid_token = True
         result = ""
         if self._curr_idx == len(self._expr):
@@ -43,7 +42,13 @@ class MathTokenizer:
         if result == "":
             raise StopIteration()
 
-        return (result, "op" if result in self.OPERATORS else "num")
+        t_type: TokenType = "invalid"
+        if result in self.OPERATORS:
+            t_type = "op"
+        elif result.isdigit():
+            t_type = "num"
+
+        return (result, t_type)
 
 
 def eval_math(left: int, right: int, op: str):
@@ -65,6 +70,9 @@ def convert(expr: str) -> tuple[list[str], Optional[str]]:
 
     tokenizer = MathTokenizer(expr)
     for token, t_type in tokenizer:
+        if t_type == "invalid":
+            return cmds, "Invalid character"
+
         if t_type == "num":
             cmds.append(token)
             continue
