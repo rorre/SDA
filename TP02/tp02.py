@@ -193,7 +193,7 @@ class MainWindow(tk.Frame):
 def main():
     app = MainWindow()
     app.master.title("Infix-Postfix Converter")  # type: ignore
-    app.master.geometry("500x200")
+    app.master.geometry("500x125")
     app.mainloop()
 
 
