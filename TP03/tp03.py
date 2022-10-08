@@ -1,4 +1,3 @@
-from ctypes import pointer
 from typing import Callable, Dict, List, Literal, Optional, Tuple
 
 ArrowValue = Literal["PREV", "NEXT"]
@@ -23,8 +22,8 @@ class DoublyLinkedList:
 
     def __str__(self) -> str:
         s = ""
-        pointer = self.head
-        while pointer != None:
+        pointer: Optional[Node] = self.head
+        while pointer is not None:
             if pointer != self.head:
                 s += "<->"
             s += f"['{pointer.value}'"
@@ -97,7 +96,7 @@ class DoublyLinkedList:
         else:
             pointer_remove = self.pointer.previous
 
-        if pointer_remove == None:
+        if pointer_remove is None:
             raise Exception("Pointer to remove is null")
 
         self._remove(pointer_remove)
@@ -111,7 +110,7 @@ class DoublyLinkedList:
             else:
                 next_pointer = self.pointer.previous
 
-            if next_pointer == None:
+            if next_pointer is None:
                 raise ValueError("Steps out of bound error")
             self.pointer = next_pointer
 
