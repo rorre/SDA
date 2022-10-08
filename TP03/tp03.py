@@ -36,7 +36,7 @@ class DoublyLinkedList:
 
     def _insert_after(self, pointer: Node, value: str):
         if pointer == self.tail:
-            raise ValueError("cannot insert new node before the tail node")
+            raise ValueError("cannot insert new node after the tail node")
 
         new_node = Node(value, pointer, pointer.next)
         if pointer.next:
@@ -73,16 +73,24 @@ class DoublyLinkedList:
         self._insert_before(self.tail, value)
 
     def remove_head(self):
+        if self.head.next == self.tail:
+            raise ValueError("Unable to remove head or tail")
+
         to_remove = self.head.next
-        self._remove(self.head.next)  # type: ignore
         if to_remove == self.pointer:
             self.pointer = self.head
 
-    def remove_tail(self):
-        to_remove = self.tail.previous
         self._remove(to_remove)  # type: ignore
+
+    def remove_tail(self):
+        if self.tail.previous == self.head:
+            raise ValueError("Unable to remove head or tail")
+
+        to_remove = self.tail.previous
         if to_remove == self.pointer:
             self.pointer = self.tail
+
+        self._remove(to_remove)  # type: ignore
 
     def insert_pointer(self, arrow: ArrowValue, value: str):
         if arrow == "NEXT":
@@ -92,14 +100,17 @@ class DoublyLinkedList:
 
     def remove_pointer(self, arrow: ArrowValue):
         if arrow == "NEXT":
+            if self.pointer == self.tail:
+                raise Exception("Tail do not have next node")
+
             pointer_remove = self.pointer.next
         else:
+            if self.pointer == self.head:
+                raise Exception("Head do not have previous node")
+
             pointer_remove = self.pointer.previous
 
-        if pointer_remove is None:
-            raise Exception("Pointer to remove is null")
-
-        self._remove(pointer_remove)
+        self._remove(pointer_remove)  # type: ignore
 
     def move_pointer(self, arrow: ArrowValue, steps: int):
         # TODO: this should not happen
@@ -111,7 +122,7 @@ class DoublyLinkedList:
                 next_pointer = self.pointer.previous
 
             if next_pointer is None:
-                raise ValueError("Steps out of bound error")
+                raise ValueError("Unable to move the pointer beyond the HEAD/TAIL")
             self.pointer = next_pointer
 
     def is_empty(self):
@@ -169,7 +180,7 @@ def main():
     while inp != "EXIT":
         cmd, *args = inp.split()
         print(cmd, *args)
-        print("    Before:")
+        print("    Before: ")
         print(f"    {dlist}")
         print()
 
@@ -179,7 +190,7 @@ def main():
             try:
                 cmds[cmd](*args)
 
-                print("    After:")
+                print("    After: ")
                 print(f"    {dlist}")
             except Exception as e:
                 print("    " + str(e))
