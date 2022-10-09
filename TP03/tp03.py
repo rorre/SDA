@@ -36,7 +36,7 @@ class DoublyLinkedList:
 
     def _insert_after(self, pointer: Node, value: str):
         if pointer == self.tail:
-            raise ValueError("cannot insert new node after the tail node")
+            raise ValueError("Insertion out of bound error")
 
         new_node = Node(value, pointer, pointer.next)
         if pointer.next:
@@ -46,7 +46,7 @@ class DoublyLinkedList:
 
     def _insert_before(self, pointer: Node, value: str):
         if pointer == self.head:
-            raise ValueError("cannot insert new node before the head node")
+            raise ValueError("Insertion out of bound error")
 
         new_node = Node(value, pointer.previous, pointer)
         if pointer.previous:
@@ -56,7 +56,7 @@ class DoublyLinkedList:
 
     def _remove(self, pointer: Node):
         if pointer == self.head or pointer == self.tail:
-            raise ValueError("Unable to remove head or tail.")
+            raise ValueError("Unable to remove head or tail")
 
         if pointer.previous:
             pointer.previous.next = pointer.next
@@ -73,24 +73,16 @@ class DoublyLinkedList:
         self._insert_before(self.tail, value)
 
     def remove_head(self):
-        if self.head.next == self.tail:
-            raise ValueError("Unable to remove head or tail")
-
         to_remove = self.head.next
+        self._remove(to_remove)  # type: ignore
         if to_remove == self.pointer:
             self.pointer = self.head
 
-        self._remove(to_remove)  # type: ignore
-
     def remove_tail(self):
-        if self.tail.previous == self.head:
-            raise ValueError("Unable to remove head or tail")
-
         to_remove = self.tail.previous
+        self._remove(to_remove)  # type: ignore
         if to_remove == self.pointer:
             self.pointer = self.tail
-
-        self._remove(to_remove)  # type: ignore
 
     def insert_pointer(self, arrow: ArrowValue, value: str):
         if arrow == "NEXT":
@@ -122,7 +114,7 @@ class DoublyLinkedList:
                 next_pointer = self.pointer.previous
 
             if next_pointer is None:
-                raise ValueError("Unable to move the pointer beyond the HEAD/TAIL")
+                raise ValueError("Steps out of bound error")
             self.pointer = next_pointer
 
     def is_empty(self):
@@ -134,7 +126,7 @@ def validate_arrow(value: str):
 
 
 def validate_int(value: str):
-    return int(value) >= 0
+    return int(value) > 0
 
 
 def validate_args(cmd: str, args: List[str]):
@@ -163,9 +155,8 @@ def validate_args(cmd: str, args: List[str]):
     return True
 
 
-def main():
-    dlist = DoublyLinkedList()
-    cmds = {
+def process_cmd(dlist: DoublyLinkedList, cmd: str, args: List[str]):
+    cmds: Dict[str, Callable] = {
         "INSERT_HEAD": dlist.insert_head,
         "REMOVE_HEAD": dlist.remove_head,
         "INSERT_TAIL": dlist.insert_tail,
@@ -176,24 +167,35 @@ def main():
         "IS_EMPTY": dlist.is_empty,
         "SIZE": lambda: dlist.size,
     }
+    print(cmd)
+    if cmd == "SIZE" or cmd == "IS_EMPTY":
+        print(f"    {cmds[cmd]()}")
+        return
+
+    print("    Before: ")
+    print(f"    {dlist}")
+    print()
+
+    if not validate_args(cmd, args):
+        print("    Syntax error")
+        return
+
+    cmd_func = cmds[cmd]
+    try:
+        cmd_func(*args)
+
+        print("    After: ")
+        print(f"    {dlist}")
+    except Exception as e:
+        print("    " + str(e))
+
+
+def main():
+    dlist = DoublyLinkedList()
     inp = input()
     while inp != "EXIT":
         cmd, *args = inp.split()
-        print(cmd, *args)
-        print("    Before: ")
-        print(f"    {dlist}")
-        print()
-
-        if not validate_args(cmd, args):
-            print("    Syntax error")
-        else:
-            try:
-                cmds[cmd](*args)
-
-                print("    After: ")
-                print(f"    {dlist}")
-            except Exception as e:
-                print("    " + str(e))
+        process_cmd(dlist, cmd, args)
 
         print()
         inp = input()
