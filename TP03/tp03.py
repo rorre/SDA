@@ -4,13 +4,22 @@ ArrowValue = Literal["PREV", "NEXT"]
 
 
 class Node:
-    def __init__(self, value: str, previous: Optional["Node"], next: Optional["Node"]):
+    __slot__ = ("value", "previous", "next")
+
+    def __init__(
+        self,
+        value: str,
+        previous: Optional["Node"],
+        next: Optional["Node"],
+    ):
         self.value = value
         self.previous = previous
         self.next = next
 
 
 class DoublyLinkedList:
+    __slot__ = ("head", "tail", "pointer", "size")
+
     def __init__(self) -> None:
         self.head = Node("_HEAD", None, None)
         self.tail = Node("_TAIL", None, None)
@@ -21,18 +30,18 @@ class DoublyLinkedList:
         self.size = 0
 
     def __str__(self) -> str:
-        s = ""
+        result = ""
         pointer: Optional[Node] = self.head
         while pointer is not None:
             if pointer != self.head:
-                s += "<->"
-            s += f"['{pointer.value}'"
+                result += "<->"
+            result += f"['{pointer.value}'"
             if self.pointer == pointer:
-                s += " (P)"
-            s += "]"
+                result += " (P)"
+            result += "]"
 
             pointer = pointer.next
-        return s
+        return result
 
     def _insert_after(self, pointer: Node, value: str):
         if pointer == self.tail:
@@ -167,9 +176,9 @@ def process_cmd(dlist: DoublyLinkedList, cmd: str, args: List[str]):
         "IS_EMPTY": dlist.is_empty,
         "SIZE": lambda: dlist.size,
     }
-    print(cmd)
+    print(cmd, *args)
     if cmd == "SIZE" or cmd == "IS_EMPTY":
-        print(f"    {cmds[cmd]()}")
+        print(f"    {cmds[cmd]()}".upper())
         return
 
     print("    Before: ")
