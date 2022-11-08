@@ -12,7 +12,7 @@ def start(i: int):
     datas: dict[str, str] = {}
 
     user: Optional[str] = None
-    f = open(f"in/{i}.txt", "w")
+    f = open(f"tc/in/{i}.txt", "w")
     for _ in range(n):
         cmds = [
             "IS_AUTHENTICATED",
