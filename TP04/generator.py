@@ -8,7 +8,8 @@ def random_str(n: int):
 
 
 def start(i: int):
-    n = random.randint(10, 10 + 990 * int(i / 100))
+    n = 10 + int(990 * (i / 100))
+    print(i, ":", n)
     datas: dict[str, str] = {}
 
     user: Optional[str] = None
@@ -79,6 +80,9 @@ def start(i: int):
                 username = random_str(random.randint(1, 10))
 
             print(f"{cmd} {username}", file=f)
+            continue
+
+        if cmd == "INSPECT":
             continue
 
         if cmd == "LOGOUT":

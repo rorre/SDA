@@ -172,7 +172,7 @@ def unregister(username: str, password: str):
 
 def logout():
     global current_user
-    if current_user != (None, None):
+    if current_user == (None, None):
         return "You Have Not Been Logged In"
 
     current_user = (None, None)
