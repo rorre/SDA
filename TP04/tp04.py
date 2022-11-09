@@ -106,7 +106,7 @@ class AuthTable:
                 break
 
         assert created_row != None
-        if self._capacity / self._rows > 0.7:
+        if self._capacity / self._rows >= 0.7:
             self._expand_table()
         return self._data[i]
 
