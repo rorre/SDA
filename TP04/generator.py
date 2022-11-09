@@ -14,6 +14,7 @@ def start(i: int):
 
     user: Optional[str] = None
     f = open(f"tc/in/{i}.txt", "w")
+    last_cmd = ""
     for _ in range(n):
         cmds = [
             "IS_AUTHENTICATED",
@@ -30,15 +31,19 @@ def start(i: int):
             cmds += ["EDIT_CURRENT"]
 
         cmd = random.choice(cmds)
+        while cmd == last_cmd:
+            cmd = random.choice(cmds)
+
+        last_cmd = cmd
         if cmd == "LOGIN" or cmd == "REGISTER" or cmd == "UNREGISTER":
-            if len(datas) != 0 and random.random() >= 0.5:
+            if len(datas) != 0 and random.random() >= 0.25:
                 username = random.choice(list(datas.keys()))
             else:
-                username = random_str(random.randint(1, 10))
+                username = random_str(random.randint(5, 10))
 
-            password = random_str(random.randint(1, 10))
+            password = random_str(random.randint(5, 10))
             actual_pw = datas.get(username)
-            if actual_pw and random.random() >= 0.5:
+            if actual_pw and random.random() >= 0.25:
                 password = actual_pw
 
             print(f"{cmd} {username} {password}", file=f)
@@ -48,6 +53,11 @@ def start(i: int):
 
             if cmd == "UNREGISTER" and username in datas:
                 del datas[username]
+                if username == user:
+                    user = None
+
+            if cmd == "LOGIN" and datas.get(username) == password:
+                user = username
 
             continue
 
@@ -61,23 +71,23 @@ def start(i: int):
                 if len(datas) != 0 and random.random() >= 0.5:
                     value = random.choice(list(datas.keys()))
                 else:
-                    value = random_str(random.randint(1, 10))
+                    value = random_str(random.randint(5, 10))
                     orig_pw = datas[user]
                     del datas[user]
                     datas[value] = orig_pw
                     user = value
             else:
-                value = random_str(random.randint(1, 10))
+                value = random_str(random.randint(5, 10))
                 datas[user] = value
 
             print(f"{cmd} {method} {value}", file=f)
             continue
 
         if cmd == "CHECK_USERNAME":
-            if len(datas) != 0 and random.random() >= 0.5:
+            if len(datas) != 0 and random.random() >= 0.25:
                 username = random.choice(list(datas.keys()))
             else:
-                username = random_str(random.randint(1, 10))
+                username = random_str(random.randint(5, 10))
 
             print(f"{cmd} {username}", file=f)
             continue
@@ -93,5 +103,5 @@ def start(i: int):
     f.close()
 
 
-for i in range(100):
+for i in range(200):
     start(i)

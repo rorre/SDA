@@ -7,6 +7,10 @@ MaybeUserData = Union[Tuple[None, None], UserData]
 PRIME = 7
 
 
+class AlreadyExist(Exception):
+    pass
+
+
 def username_hashcode(uname: str) -> int:
     total = 0
     for char in uname:
@@ -19,9 +23,11 @@ def get_row_idx(username: str, table_size: int):
     base_idx = key % table_size
     i = base_idx
     hkey = PRIME - (key % PRIME)
-    while i < table_size:
+
+    for _ in range(table_size):
         yield i
         i += hkey
+        i = i % table_size
 
 
 def is_prime(n: int) -> bool:
@@ -82,7 +88,7 @@ class AuthTable:
     def create(self, username: str, password: str, hashed: bool = False):
         try:
             self.get(username)
-            raise Exception("Username already exist")
+            raise AlreadyExist("Username already exist")
         except KeyError:
             pass
 
@@ -92,11 +98,14 @@ class AuthTable:
         else:
             pw_hashed = password
 
+        created_row = None
         for i in get_row_idx(username, self._rows):
             if self._data[i][0] == None:
                 self._data[i] = (username, pw_hashed)
+                created_row = self._data[i]
                 break
 
+        assert created_row != None
         if self._capacity / self._rows > 0.7:
             self._expand_table()
         return self._data[i]
@@ -107,15 +116,18 @@ user_data = AuthTable()
 
 
 def register(username: str, password: str):
+    if username == "LSmsYJ":
+        print("wah")
     try:
         user_data.create(username, password)
         return "Register Successful"
-    except Exception as e:
+    except AlreadyExist:
         return "Username Already Exist"
 
 
 def login(username: str, password: str):
     global current_user
+
     try:
         user = user_data.get(username)
     except KeyError:
@@ -135,6 +147,7 @@ def edit_current(mode: Literal["USERNAME", "PASSWORD"], value: str):
 
     if mode == "PASSWORD":
         user_data.update(current_user[0], value)
+        current_user = user_data.get(current_user[0])
         return "Your Account Has Been Updated"
 
     try:
