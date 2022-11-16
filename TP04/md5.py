@@ -103,10 +103,7 @@ class MD5Hash:
 
     def _step_four(self):
         for curr_chunk in chunk_lst(self._message, 64):
-            print("-------------------------------")
             M = [int.from_bytes(chunk, "little") for chunk in chunk_lst(curr_chunk, 4)]
-            print(len(curr_chunk), curr_chunk)
-            print(len(M), M)
 
             A = self._a
             B = self._b
@@ -126,13 +123,6 @@ class MD5Hash:
                 else:
                     F = C ^ (B | ~D)
                     g = (7 * i) % 16
-
-                print(M[g])
-                print(A)
-                print(B)
-                print(C)
-                print(D)
-                print("--------------------------")
 
                 F = F + A + self.K[i] + M[g]
                 A = D
@@ -155,3 +145,24 @@ class MD5Hash:
             x << (32 * i) for i, x in enumerate((self._a, self._b, self._c, self._d))
         ).to_bytes(16, byteorder="little")
         return "{:032x}".format(int.from_bytes(b, byteorder="big"))
+
+
+if __name__ == "__main__":
+    for t, e in [
+        ("", "d41d8cd98f00b204e9800998ecf8427e"),
+        ("a", "0cc175b9c0f1b6a831c399e269772661"),
+        ("abc", "900150983cd24fb0d6963f7d28e17f72"),
+        ("message digest", "f96b697d7cb7938d525a2f31aaf161d0"),
+        ("abcdefghijklmnopqrstuvwxyz", "c3fcd3d76192e4007dfb496cca67e13b"),
+        (
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+            "d174ab98d277d9f5a5611c2c9f419d9f",
+        ),
+        (
+            "12345678901234567890123456789012345678901234567890123456789012345678901234567890",
+            "57edf4a22be3c955ac49da2e2107b67a",
+        ),
+        ("你好吗？", "bb0b6bc45375143826f72439e050743e"),
+        ("お元気ですか", "2e0bd9e58d042f5234a1202cc3c7d499"),
+    ]:
+        print(MD5Hash.hash(t), "expected", e)
