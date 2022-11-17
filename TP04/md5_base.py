@@ -43,12 +43,12 @@ def md5(message):
             to_rotate = a + f + constants[i] + int.from_bytes(chunk[4*g:4*g+4], byteorder='little')
             new_b = (b + left_rotate(to_rotate, rotate_amounts[i])) & 0xFFFFFFFF
             
-            print(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
-            print(a)
-            print(b)
-            print(c)
-            print(d)
-            print("--------------------------")
+            #print(int.from_bytes(chunk[4*g:4*g+4], byteorder='little'))
+            #print(a)
+            #print(b)
+            #print(c)
+            #print(d)
+            #print("--------------------------")
 
             a, b, c, d = d, new_b, b, c
         for i, val in enumerate([a, b, c, d]):

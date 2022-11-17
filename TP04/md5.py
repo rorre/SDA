@@ -1,16 +1,14 @@
-import struct
-from typing import Iterable, TypeVar
+from typing import Iterable, TypeVar, List
 
 T = TypeVar("T")
 
 
-def chunk_lst(lst: Iterable[T], length: int) -> Iterable[Iterable[T]]:
+def chunk_lst(lst: List[T], length: int) -> Iterable[List[T]]:
     for i in range(0, len(lst), length):
         yield lst[i : i + length]
 
 
 def rotate_left(x: int, n: int):
-    x &= 0xFFFFFFFF
     return ((x << n) | (x >> (32 - n))) & 0xFFFFFFFF
 
 
@@ -57,7 +55,7 @@ class MD5Hash:
         self._b = 0xEFCDAB89
         self._c = 0x98BADCFE
         self._d = 0x10325476
-        self._orig_message = bytearray(data.encode("utf-8"))
+        self._orig_len = len(data.encode("utf-8"))
         self._message = bytearray(data.encode("utf-8"))
 
     def _step_one(self):
@@ -98,7 +96,7 @@ class MD5Hash:
         where N is a multiple of 16.
         """
         # Byte array is in...bytes. So multiple by 8
-        len_bits = (len(self._orig_message) * 8) & 0xFFFFFFFFFFFFFFFF  # Mod 2^64
+        len_bits = (self._orig_len * 8) & 0xFFFFFFFFFFFFFFFF  # Mod 2^64
         self._message += len_bits.to_bytes(8, "little")
 
     def _step_four(self):
@@ -124,7 +122,7 @@ class MD5Hash:
                     F = C ^ (B | ~D)
                     g = (7 * i) % 16
 
-                F = F + A + self.K[i] + M[g]
+                F = (F + A + self.K[i] + M[g]) & 0xFFFFFFFF
                 A = D
                 D = C
                 C = B
@@ -141,9 +139,11 @@ class MD5Hash:
             self._d &= 0xFFFFFFFF
 
     def _step_five(self):
-        b = sum(
-            x << (32 * i) for i, x in enumerate((self._a, self._b, self._c, self._d))
-        ).to_bytes(16, byteorder="little")
+        result = 0
+        for i, x in enumerate((self._a, self._b, self._c, self._d)):
+            result |= x << (32 * i)
+
+        b = result.to_bytes(16, byteorder="little")
         return "{:032x}".format(int.from_bytes(b, byteorder="big"))
 
 
