@@ -8,12 +8,12 @@ def random_str(n: int):
 
 
 def start(i: int):
-    n = 10 + int(990 * (i / 100))
+    n = 10 + int(990 * (i / 10))
     print(i, ":", n)
     datas: dict[str, str] = {}
 
     user: Optional[str] = None
-    f = open(f"tc/in/{i}.txt", "w")
+    f = open(f"tc2/in/{i}.txt", "w")
     last_cmd = ""
     for _ in range(n):
         cmds = [

@@ -1,6 +1,7 @@
 import hashlib
 from typing import List, Literal, Tuple, Optional, Union, cast
 import math
+from md5 import MD5Hash
 
 UserData = Tuple[str, str]
 MaybeUserData = Union[Tuple[None, None], UserData]
@@ -38,9 +39,7 @@ def is_prime(n: int) -> bool:
 
 
 def hash_str(data: str) -> str:
-    h = hashlib.md5()
-    h.update(data.encode())
-    return h.hexdigest()
+    return MD5Hash.hash(data)
 
 
 class AuthTable:
@@ -52,7 +51,6 @@ class AuthTable:
         self._capacity = 0
 
     def _expand_table(self):
-        orig_row = self._rows
         self._rows *= 2
         while True:
             if is_prime(self._rows):
@@ -60,8 +58,18 @@ class AuthTable:
 
             self._rows += 1
 
-        for _ in range(self._rows - orig_row):
-            self._data.append((None, None))
+        new_datas: List[MaybeUserData] = [(None, None)] * self._rows
+        for data in self._data:
+            if data[0] == None:
+                continue
+
+            username, pw_hashed = data
+            for i in get_row_idx(username, self._rows):
+                if new_datas[i][0] == None:
+                    new_datas[i] = (username, pw_hashed)
+                    break
+
+        self._data = new_datas
 
     def _find_username_idx(self, username: str) -> int:
         for i in get_row_idx(username, self._rows):
