@@ -1,9 +1,9 @@
-from typing import Iterable, TypeVar, List
+from typing import Iterable, Sequence, TypeVar
 
 T = TypeVar("T")
 
 
-def chunk_lst(lst: List[T], length: int) -> Iterable[List[T]]:
+def chunk_lst(lst: Sequence[T], length: int) -> Iterable[Sequence[T]]:
     for i in range(0, len(lst), length):
         yield lst[i : i + length]
 
@@ -14,12 +14,16 @@ def rotate_left(x: int, n: int):
 
 class MD5Hash:
     # fmt: off
+    # Constants for step 4
+    # Number of rotation per i
     s = [
         7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
         5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
         4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,
         6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,
     ]
+    # Essentially precalculated version of floor(2^32 × abs(sin(i + 1)))
+    # For i in 0 to 63
     K = [
             0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
             0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
@@ -49,8 +53,7 @@ class MD5Hash:
         return c._step_five()
 
     def __init__(self, data: str):
-        # Initial state
-        # VALUES ARE LITTLE ENDIAN
+        # Step 3: Initial state, all values are little endian
         self._a = 0x67452301
         self._b = 0xEFCDAB89
         self._c = 0x98BADCFE
@@ -73,8 +76,14 @@ class MD5Hash:
         the padded message becomes congruent to 448, modulo 512. In all, at
         least one bit and at most 512 bits are appended.
         """
+        # Append 1000 0000 since we're working with bytes, it's technically
+        # the same thing and is accurate when compared to the RFC's
+        # reference implementation
         self._message.append(0x80)
 
+        # Simply append 0 bytez until we are congruent to 448 modulo 512
+        # 448 bits -> 56 bytes
+        # 512 bits -> 64 bytes
         while len(self._message) % 64 != 56:
             self._message.append(0)
 
@@ -97,10 +106,13 @@ class MD5Hash:
         """
         # Byte array is in...bytes. So multiple by 8
         len_bits = (self._orig_len * 8) & 0xFFFFFFFFFFFFFFFF  # Mod 2^64
+        # Change len bits into bytes, as little endian value
         self._message += len_bits.to_bytes(8, "little")
 
     def _step_four(self):
+        # Process per 512-bit block
         for curr_chunk in chunk_lst(self._message, 64):
+            # Split 512-bit block into 16 32-bit block
             M = [int.from_bytes(chunk, "little") for chunk in chunk_lst(curr_chunk, 4)]
 
             A = self._a
@@ -122,12 +134,14 @@ class MD5Hash:
                     F = C ^ (B | ~D)
                     g = (7 * i) % 16
 
-                F = (F + A + self.K[i] + M[g]) & 0xFFFFFFFF
+                # Ensure that calculation is in uint bounds
+                F = (F + A + self.K[i] + M[g]) & 0xFFFFFFFF  # mod 2^32
                 A = D
                 D = C
                 C = B
-                B = (B + rotate_left(F, self.s[i])) & 0xFFFFFFFF
+                B = (B + rotate_left(F, self.s[i])) & 0xFFFFFFFF  # mod 2^32
 
+            # Add values and mod by 2^32
             self._a += A
             self._b += B
             self._c += C
@@ -139,11 +153,23 @@ class MD5Hash:
             self._d &= 0xFFFFFFFF
 
     def _step_five(self):
+        """
+        Step 5. Output
+
+        The message digest produced as output is A, B, C, D. That is, we
+        begin with the low-order byte of A, and end with the high-order byte
+        of D.
+        """
+        # Essentially putting the bytes into the following order:
+        # DDDDCCCCBBBBAAAA
         result = 0
         for i, x in enumerate((self._a, self._b, self._c, self._d)):
             result |= x << (32 * i)
 
+        # Result is in int, so change to hex bytes with still little endian
         b = result.to_bytes(16, byteorder="little")
+
+        # Then reparse the byte as big endian to format it
         return "{:032x}".format(int.from_bytes(b, byteorder="big"))
 
 
