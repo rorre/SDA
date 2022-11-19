@@ -45,7 +45,7 @@ def start(i: int):
             cmd = random.choice(cmds)
 
         last_cmd = cmd
-        if cmd == "INSPECT":
+        if cmd == "INSPECT" and random.random() >= 0.9:
             for i in range(capacity):
                 print(f"INSPECT {i}", file=f)
             continue
