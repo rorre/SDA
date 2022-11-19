@@ -1,6 +1,7 @@
 import random
 from typing import Optional
 import string
+from tp04 import is_prime
 
 
 def random_str(n: int):
@@ -15,6 +16,9 @@ def start(i: int):
     user: Optional[str] = None
     f = open(f"tc2/in/{i}.txt", "w")
     last_cmd = ""
+    capacity = 11
+    cnt = 0
+
     for _ in range(n):
         cmds = [
             "IS_AUTHENTICATED",
@@ -23,7 +27,13 @@ def start(i: int):
             "CHECK_USERNAME",
             "COUNT_USERNAME",
             "CAPACITY",
+            "INSPECT",
         ]
+
+        if (cnt / capacity) >= 0.7:
+            capacity *= 2
+            while not is_prime(capacity):
+                capacity += 1
 
         if not user:
             cmds += ["LOGIN", "REGISTER", "UNREGISTER"]
@@ -35,7 +45,16 @@ def start(i: int):
             cmd = random.choice(cmds)
 
         last_cmd = cmd
+        if cmd == "INSPECT":
+            for i in range(capacity):
+                print(f"INSPECT {i}", file=f)
+            continue
+
         if cmd == "LOGIN" or cmd == "REGISTER" or cmd == "UNREGISTER":
+            if cmd == "UNREGISTER":
+                if random.random() >= 0.25:
+                    continue
+
             if len(datas) != 0 and random.random() >= 0.25:
                 username = random.choice(list(datas.keys()))
             else:
@@ -50,9 +69,11 @@ def start(i: int):
 
             if cmd == "REGISTER" and username not in datas:
                 datas[username] = password
+                cnt += 1
 
             if cmd == "UNREGISTER" and username in datas:
                 del datas[username]
+                cnt -= 1
                 if username == user:
                     user = None
 
