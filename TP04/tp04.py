@@ -102,7 +102,7 @@ class AuthTable:
             username, pw_hashed = data
             for i in get_row_idx(username, self._rows):
                 # Only fill row if there is no user residing in it
-                if new_datas[i][0] is not None:
+                if new_datas[i][0] is None:
                     new_datas[i] = (username, pw_hashed)
                     break
 
@@ -159,7 +159,7 @@ class AuthTable:
 
         # Insert data in row where it is possible
         for i in get_row_idx(username, self._rows):
-            if self._data[i][0] is not None:
+            if self._data[i][0] is None:
                 self._data[i] = (username, pw_hashed)
                 break
 
@@ -294,24 +294,25 @@ def capacity():
     return str(user_data._rows)
 
 
-while True:
-    # Split cmd and its args
-    cmd, *args = input().split()
-    if cmd == "EXIT":
-        break
+if __name__ == "__main__":
+    while True:
+        # Split cmd and its args
+        cmd, *args = input().split()
+        if cmd == "EXIT":
+            break
 
-    # Command mapping, all cmd will always return string
-    cmds = {
-        "REGISTER": register,
-        "LOGIN": login,
-        "EDIT_CURRENT": edit_current,
-        "IS_AUTHENTICATED": is_authenticated,
-        "UNREGISTER": unregister,
-        "LOGOUT": logout,
-        "INSPECT": inspect,
-        "CHECK_USERNAME": check_username,
-        "COUNT_USERNAME": count_username,
-        "CAPACITY": capacity,
-    }
-    # Run the command and print the string result
-    print(cmds[cmd](*args))  # type: ignore
+        # Command mapping, all cmd will always return string
+        cmds = {
+            "REGISTER": register,
+            "LOGIN": login,
+            "EDIT_CURRENT": edit_current,
+            "IS_AUTHENTICATED": is_authenticated,
+            "UNREGISTER": unregister,
+            "LOGOUT": logout,
+            "INSPECT": inspect,
+            "CHECK_USERNAME": check_username,
+            "COUNT_USERNAME": count_username,
+            "CAPACITY": capacity,
+        }
+        # Run the command and print the string result
+        print(cmds[cmd](*args))  # type: ignore
