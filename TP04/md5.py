@@ -171,24 +171,3 @@ class MD5Hash:
 
         # Then reparse the byte as big endian to format it
         return "{:032x}".format(int.from_bytes(b, byteorder="big"))
-
-
-if __name__ == "__main__":
-    for t, e in [
-        ("", "d41d8cd98f00b204e9800998ecf8427e"),
-        ("a", "0cc175b9c0f1b6a831c399e269772661"),
-        ("abc", "900150983cd24fb0d6963f7d28e17f72"),
-        ("message digest", "f96b697d7cb7938d525a2f31aaf161d0"),
-        ("abcdefghijklmnopqrstuvwxyz", "c3fcd3d76192e4007dfb496cca67e13b"),
-        (
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-            "d174ab98d277d9f5a5611c2c9f419d9f",
-        ),
-        (
-            "12345678901234567890123456789012345678901234567890123456789012345678901234567890",
-            "57edf4a22be3c955ac49da2e2107b67a",
-        ),
-        ("你好吗？", "bb0b6bc45375143826f72439e050743e"),
-        ("お元気ですか", "2e0bd9e58d042f5234a1202cc3c7d499"),
-    ]:
-        print(MD5Hash.hash(t), "expected", e)
