@@ -1,9 +1,8 @@
 import sys
 
-MatrixSize = tuple[int, int]
-
 
 def get_digits(num: int):
+    """Returns number of digits of given number"""
     n = 0
     while num > 0:
         n += 1
@@ -12,19 +11,33 @@ def get_digits(num: int):
 
 
 def pprint_table(arr: list[list[int]]):
+    """Pretty print given table
+
+    List must be of size NxN."""
     longest_len = 0
-    for i in range(len(arr) - 1):
-        for j in range(1, len(arr)):
+    size = len(arr)
+    size_digits = get_digits(size)
+    for i in range(size - 1):
+        for j in range(1, size):
             longest_len = max(longest_len, get_digits(arr[i][j]))
 
-    for i in range(len(arr)):
+    if size_digits > longest_len:
+        longest_len = size_digits
+
+    print("".rjust(size_digits), end="")
+    print(" | ", end="")
+    for i in range(size):
+        print(str(i).center(longest_len), end=" ")
+    print()
+    print("-" * (size_digits + 2 + 2 + (1 + longest_len) * size))
+
+    for i in range(size):
+        print(str(i).center(size_digits), end=" ")
         print("| ", end="")
-        for j in range(len(arr)):
+        for j in range(size):
             obj = str(arr[i][j])
             print(obj.rjust(longest_len), end=" ")
-        print(
-            "|",
-        )
+        print("|")
 
 
 def matrix_chain_order(dims: list[int]):
@@ -52,6 +65,7 @@ def print_multip(s: list[list[int]], i: int, j: int):
     else:
         print("(", end="")
         print_multip(s, i, s[i][j])
+        print(" ", end="")
         print_multip(s, s[i][j] + 1, j)
         print(")", end="")
 
@@ -85,6 +99,13 @@ while True:
 
     dimensions.append(right_int)
     m, s = matrix_chain_order(dimensions)
+
+    print("Tabel M")
+    pprint_table(m)
+
+    print("Tabel S")
+    pprint_table(s)
+
     print(m[0][-1])
     print_multip(s, 0, len(s) - 1)
     print()
