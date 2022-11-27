@@ -85,16 +85,7 @@ while True:
 
     dimensions.append(right_int)
     m, s = matrix_chain_order(dimensions)
+    print(m[0][-1])
     print_multip(s, 0, len(s) - 1)
     print()
     print()
-
-
-# lol = [(30, 35), (35, 15), (15, 5), (5, 10), (10, 20), (20, 25)]
-# dims = list(map(lambda x: x[0], lol))
-# dims.append(lol[-1][1])
-# m, s = matrix_chain_order(dims)
-# # pprint_table(m)
-# # pprint_table(s)
-# # print(s)
-# print_multip(s, 0, len(s) - 1)
