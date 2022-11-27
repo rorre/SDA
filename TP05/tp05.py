@@ -14,26 +14,44 @@ def pprint_table(arr: list[list[int]]):
     """Pretty print given table
 
     List must be of size NxN."""
+    # Get the longest width taken for every single digit to be used
     longest_len = 0
     size = len(arr)
     size_digits = get_digits(size)
+
+    # Skip last line and first col, always 0
     for i in range(size - 1):
         for j in range(1, size):
             longest_len = max(longest_len, get_digits(arr[i][j]))
 
+    # If for some reason the size digits is longer than content
+    # then just use it. We will need the header be in line with content.
     if size_digits > longest_len:
         longest_len = size_digits
 
+    # Header
+    # Empty space on top left
     print("".rjust(size_digits), end="")
     print(" | ", end="")
+
+    # Every j centerized
     for i in range(size):
         print(str(i).center(longest_len), end=" ")
     print()
+
+    # Separator between header and content
+    # size_digits + 2 -> left empty space + " |"
+    # + 2 -> Ending " |"
+    # (1 + longest_len) * size -> Largest digits + " " for each number
     print("-" * (size_digits + 2 + 2 + (1 + longest_len) * size))
 
+    # Actual content
     for i in range(size):
+        # Row number + sep
         print(str(i).center(size_digits), end=" ")
         print("| ", end="")
+
+        # Print every col, right adjusted with length of highest num
         for j in range(size):
             obj = str(arr[i][j])
             print(obj.rjust(longest_len), end=" ")
