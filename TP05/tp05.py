@@ -140,11 +140,11 @@ while True:
     # Run matrix chain order and retrieve m and s
     m, s = matrix_chain_order(dimensions)
 
-    # print("Tabel M")
-    # pprint_table(m)
+    print("Tabel M")
+    pprint_table(m)
 
-    # print("Tabel S")
-    # pprint_table(s)
+    print("Tabel S")
+    pprint_table(s)
 
     # Print most optimized, which where i = 0 and j = n - 1
     print(m[0][-1])
