@@ -1,13 +1,26 @@
 from collections import defaultdict
 
-inside: dict[str, set[str]] = defaultdict(set)
-outside: dict[str, set[str]] = defaultdict(set)
+vertexes: dict[str, "Vertex"] = {}
+inside: dict["Vertex", set["Vertex"]] = defaultdict(set)
+outside: dict["Vertex", set["Vertex"]] = defaultdict(set)
 
 
-class IntHeap:
+class Vertex:
+    __slots__ = ("name", "level", "state")
+
+    def __init__(self, name: str):
+        self.name = name
+        self.level = -1
+        self.state = 0
+
+    def __hash__(self) -> int:
+        return hash(id(self))
+
+
+class VertexHeap:
     __slots__ = ("_data",)
 
-    def __init__(self, iter: list[str]):
+    def __init__(self, iter: list[Vertex]):
         self._data = iter
 
     def __len__(self):
@@ -18,7 +31,7 @@ class IntHeap:
 
     def _upheap(self, j: int):
         parent_idx = (j - 1) >> 1  # // 2
-        if j > 0 and self._data[j] < self._data[parent_idx]:
+        if j > 0 and self._data[j].name < self._data[parent_idx].name:
             self._swap(j, parent_idx)
             self._upheap(parent_idx)
 
@@ -32,14 +45,14 @@ class IntHeap:
 
         right_idx = 2 * j + 2
         if right_idx < len(self._data):
-            if self._data[right_idx] < self._data[left_idx]:
+            if self._data[right_idx].name < self._data[left_idx].name:
                 smallest_child = right_idx
 
-        if self._data[smallest_child] < self._data[j]:
+        if self._data[smallest_child].name < self._data[j].name:
             self._swap(j, smallest_child)
             self._downheap(smallest_child)
 
-    def append(self, elem: str):
+    def append(self, elem: Vertex):
         self._data.append(elem)
         self._upheap(len(self._data) - 1)
 
@@ -53,83 +66,89 @@ class IntHeap:
         return item
 
 
-def add_vertex(v: str):
+def add_vertex(v_name: str):
+    v = Vertex(v_name)
     inside[v] = set()
     outside[v] = set()
+    vertexes[v_name] = v
+    return v
 
 
-def add_edge(source: str, target: str):
+def add_edge(source: Vertex, target: Vertex):
     outside[source].add(target)
     inside[target].add(source)
 
 
-def remove_edge(source: str, target: str):
+def remove_edge(source: Vertex, target: Vertex):
     outside[source].remove(target)
     inside[target].remove(source)
 
 
 def add_matkul(matkul: str, *deps: str):
-    if matkul in inside:
+    if matkul in vertexes:
         print(f"Matkul {matkul} sudah ada")
         return
 
     for dep in deps:
-        if dep not in inside:
+        if dep not in vertexes:
             print(f"Matkul {dep} tidak ditemukan")
             return
 
-    add_vertex(matkul)
+    v = add_vertex(matkul)
     for dep in deps:
-        add_edge(dep, matkul)
+        u = vertexes[dep]
+        add_edge(u, v)
 
 
 def edit_matkul(matkul: str, *deps: str):
-    if matkul not in inside:
+    if matkul not in vertexes:
         print(f"Matkul {matkul} tidak ditemukan")
         return
 
     for dep in deps:
-        if dep not in inside:
-            print(f"Matkul {dep} tidak ditemukan”")
+        if dep not in vertexes:
+            print(f"Matkul {dep} tidak ditemukan")
             return
 
-    for prev_dep in inside[matkul].copy():
-        remove_edge(prev_dep, matkul)
+    v = vertexes[matkul]
+    for u in inside[v].copy():
+        remove_edge(u, v)
 
     for dep in deps:
-        add_edge(dep, matkul)
+        u = vertexes[dep]
+        add_edge(u, v)
 
 
 def print_sorted() -> None:
-    state: dict[str, int] = {}
-    leveled: list[IntHeap] = []
+    for v in vertexes.values():
+        v.state = 0
 
-    for v in inside:
-        state[v] = 0
-
-    def visit(u: str, level: int):
-        if len(leveled) < level:
-            leveled.append(IntHeap([u]))
-        else:
-            arr = leveled[level - 1]
-            arr.append(u)
-
-        state[u] = 1
+    def visit(u: Vertex, level: int):
+        u.level = level
+        u.state = 1
 
         for adj_v in outside[u]:
-            if state[adj_v] == 0:
+            if adj_v.state == 0 or adj_v.level < level + 1:
                 visit(adj_v, level + 1)
 
-        state[u] = 2
+        u.state = 2
 
-    for v in inside:
-        if state[v] == 0:
+    for v in vertexes.values():
+        if v.state == 0:
             visit(v, 1)
+
+    leveled: list[VertexHeap] = []
+    for v in vertexes.values():
+        if len(leveled) < v.level:
+            leveled.append(VertexHeap([v]))
+        else:
+            arr = leveled[v.level - 1]
+            arr.append(v)
 
     print(
         ", ".join(
             map(
-                lambda x: ", ".join([x.pop() for _ in range(len(x))]),
+                lambda x: ", ".join([x.pop().name for _ in range(len(x))]),
                 leveled,
             )
         )
