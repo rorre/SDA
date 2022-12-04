@@ -55,7 +55,7 @@ func (h VertexHeap) downheap(j int) {
 func (h *VertexHeap) Pop() (*Vertex, error) {
 	arrLen := len(*h)
 	if arrLen == 0 {
-		return &Vertex{}, errors.New("Attempting to pop an empty heap")
+		return nil, errors.New("attempting to pop an empty heap")
 	}
 
 	h.swap(0, arrLen-1)
