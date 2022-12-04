@@ -1,5 +1,6 @@
 # $RUNCMD = "python tp06.py"
-$RUNCMD = ".\6.exe"
+# $RUNCMD = ".\6.exe"
+$RUNCMD = "java TP06"
 
 New-Item -Path 'tc/out2' -ItemType Directory
 for ($i = 0; $i -le 50; $i++) {
