@@ -8,26 +8,32 @@ import (
 	"strings"
 )
 
-type StringHeap []string
+type Vertex struct {
+	name  string
+	level int
+	state bool
+}
 
-func (h *StringHeap) Append(elem string) {
+type VertexHeap []*Vertex
+
+func (h *VertexHeap) Append(elem *Vertex) {
 	*h = append(*h, elem)
 	h.upheap(len(*h) - 1)
 }
 
-func (h StringHeap) swap(i int, j int) {
+func (h VertexHeap) swap(i int, j int) {
 	h[i], h[j] = h[j], h[i]
 }
 
-func (h StringHeap) upheap(j int) {
+func (h VertexHeap) upheap(j int) {
 	parentIdx := (j - 1) >> 1
-	if j > 0 && h[j] < h[parentIdx] {
+	if j > 0 && h[j].name < h[parentIdx].name {
 		h.swap(j, parentIdx)
 		h.upheap(parentIdx)
 	}
 }
 
-func (h StringHeap) downheap(j int) {
+func (h VertexHeap) downheap(j int) {
 	leftIdx := 2*j + 1
 	if leftIdx >= len(h) {
 		return
@@ -36,20 +42,20 @@ func (h StringHeap) downheap(j int) {
 	smallestChildIdx := leftIdx
 
 	rightIdx := 2*j + 2
-	if rightIdx < len(h) && h[rightIdx] < h[leftIdx] {
+	if rightIdx < len(h) && h[rightIdx].name < h[leftIdx].name {
 		smallestChildIdx = rightIdx
 	}
 
-	if h[smallestChildIdx] < h[j] {
+	if h[smallestChildIdx].name < h[j].name {
 		h.swap(j, smallestChildIdx)
 		h.downheap(smallestChildIdx)
 	}
 }
 
-func (h *StringHeap) Pop() (string, error) {
+func (h *VertexHeap) Pop() (*Vertex, error) {
 	arrLen := len(*h)
 	if arrLen == 0 {
-		return "", errors.New("Attempting to pop an empty heap")
+		return &Vertex{}, errors.New("Attempting to pop an empty heap")
 	}
 
 	h.swap(0, arrLen-1)
@@ -59,17 +65,22 @@ func (h *StringHeap) Pop() (string, error) {
 	return item, nil
 }
 
-var inside map[string][]string = make(map[string][]string)
-var outside map[string][]string = make(map[string][]string)
-var vertexes []string = make([]string, 0)
+var inside map[*Vertex][]*Vertex = make(map[*Vertex][]*Vertex)
+var outside map[*Vertex][]*Vertex = make(map[*Vertex][]*Vertex)
+var vertexesMap map[string]*Vertex = make(map[string]*Vertex)
+var vertexes []*Vertex = make([]*Vertex, 0)
 
-func AddVertex(v string) {
-	inside[v] = make([]string, 0)
-	outside[v] = make([]string, 0)
-	vertexes = append(vertexes, v)
+func AddVertex(vName string) *Vertex {
+	v := Vertex{name: vName}
+	inside[&v] = make([]*Vertex, 0)
+	outside[&v] = make([]*Vertex, 0)
+
+	vertexes = append(vertexes, &v)
+	vertexesMap[vName] = &v
+	return &v
 }
 
-func AddEdge(source string, target string) {
+func AddEdge(source *Vertex, target *Vertex) {
 	outside[source] = append(outside[source], target)
 	inside[target] = append(inside[target], source)
 }
@@ -83,82 +94,87 @@ func RemoveElement[T comparable](l []T, item T) []T {
 	return l
 }
 
-func RemoveEdge(source string, target string) {
+func RemoveEdge(source *Vertex, target *Vertex) {
 	outside[source] = RemoveElement(outside[source], target)
 	inside[target] = RemoveElement(inside[target], source)
 }
 
 func AddMatkul(matkul string, deps ...string) {
-	if _, ok := inside[matkul]; ok {
+	if _, ok := vertexesMap[matkul]; ok {
 		fmt.Printf("Matkul %s sudah ada", matkul)
 		return
 	}
 
 	for _, dep := range deps {
-		if _, ok := inside[dep]; !ok {
+		if _, ok := vertexesMap[dep]; !ok {
 			fmt.Printf("Matkul %s tidak ditemukan", dep)
 			return
 		}
 	}
 
-	AddVertex(matkul)
+	matkulV := AddVertex(matkul)
 	for _, dep := range deps {
-		AddEdge(dep, matkul)
+		depV := vertexesMap[dep]
+		AddEdge(depV, matkulV)
 	}
 }
 
 func EditMatkul(matkul string, deps ...string) {
-	if _, ok := inside[matkul]; !ok {
+	if _, ok := vertexesMap[matkul]; !ok {
 		fmt.Printf("Matkul %s tidak ditemukan", matkul)
 		return
 	}
 
 	for _, dep := range deps {
-		if _, ok := inside[dep]; !ok {
+		if _, ok := vertexesMap[dep]; !ok {
 			fmt.Printf("Matkul %s tidak ditemukan", dep)
 			return
 		}
 	}
 
-	var prevDeps []string
-	copy(prevDeps, inside[matkul])
+	matkulV := vertexesMap[matkul]
+
+	var prevDeps []*Vertex = make([]*Vertex, len(inside[matkulV]))
+	copy(prevDeps, inside[matkulV])
 	for _, dep := range prevDeps {
-		RemoveEdge(dep, matkul)
+		RemoveEdge(dep, matkulV)
 	}
 
 	for _, dep := range deps {
-		AddEdge(dep, matkul)
+		depV := vertexesMap[dep]
+		AddEdge(depV, matkulV)
 	}
 }
 
-func VisitVertex(state map[string]bool, leveled *[]StringHeap, v string, level int) {
-	curLeveled := *leveled
-	if len(*leveled) < level {
-		curLeveled = append(curLeveled, StringHeap{v})
-		*leveled = curLeveled
-	} else {
-		curLeveled[level-1].Append(v)
-	}
+func VisitVertex(v *Vertex, level int) {
+	v.state = true
+	v.level = level
 
-	state[v] = true
 	for _, adjV := range outside[v] {
-		if !state[adjV] {
-			VisitVertex(state, leveled, adjV, level+1)
+		if !adjV.state || adjV.level < level+1 {
+			VisitVertex(adjV, level+1)
 		}
 	}
 }
 
 func PrintSorted() {
-	state := make(map[string]bool)
-	leveled := make([]StringHeap, 0)
-
 	for _, k := range vertexes {
-		state[k] = false
+		k.state = false
+		k.level = -1
 	}
 
 	for _, v := range vertexes {
-		if !state[v] {
-			VisitVertex(state, &leveled, v, 1)
+		if !v.state {
+			VisitVertex(v, 1)
+		}
+	}
+
+	leveled := make([]VertexHeap, 0)
+	for _, k := range vertexes {
+		if len(leveled) < k.level {
+			leveled = append(leveled, VertexHeap{k})
+		} else {
+			leveled[k.level-1].Append(k)
 		}
 	}
 
@@ -166,7 +182,7 @@ func PrintSorted() {
 	for _, levelArr := range leveled {
 		for range levelArr {
 			matkul, _ := levelArr.Pop()
-			sorted = append(sorted, matkul)
+			sorted = append(sorted, matkul.name)
 		}
 	}
 

@@ -7,12 +7,18 @@ def gen_word(n: int):
 
 
 def gen_edge(i: int, j: int):
-    return [(i, random.randint(0, i - 1)) for _ in range(random.randint(0, i - 1))]
+    return set(
+        (i, v)
+        for v in random.choices(
+            list(range(0, i)),
+            k=random.randint(0, i - 1),
+        )
+    )
 
 
 def gen_tc(i: int):
     f = open(f"tc/in/in{i}.txt", "w")
-    vertexes = [gen_word(10) for _ in range((i + 1) * 10)]
+    vertexes = [gen_word(10) for _ in range((i + 1) * 20)]
 
     for i in range(len(vertexes)):
         v = vertexes[i]
@@ -41,5 +47,5 @@ def gen_tc(i: int):
     f.close()
 
 
-for i in range(101):
+for i in range(51):
     gen_tc(i)

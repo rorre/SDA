@@ -122,6 +122,7 @@ def edit_matkul(matkul: str, *deps: str):
 def print_sorted() -> None:
     for v in vertexes.values():
         v.state = 0
+        v.level = -1
 
     def visit(u: Vertex, level: int):
         u.level = level
