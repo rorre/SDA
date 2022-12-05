@@ -6,12 +6,16 @@ outside: dict["Vertex", set["Vertex"]] = defaultdict(set)
 
 
 class Vertex:
-    __slots__ = ("name", "level", "state")
+    __slots__ = ("name", "level", "seen")
 
     def __init__(self, name: str):
         self.name = name
         self.level = -1
-        self.state = 0
+        self.seen = False
+    
+    def __lt__(self, other: object):
+        if isinstance(other, Vertex):
+            return self.level < other.level or (self.level == other.level and self.name <other.name )
 
     def __hash__(self) -> int:
         return hash(id(self))
@@ -31,7 +35,7 @@ class VertexHeap:
 
     def _upheap(self, j: int):
         parent_idx = (j - 1) >> 1  # // 2
-        if j > 0 and self._data[j].name < self._data[parent_idx].name:
+        if j > 0 and self._data[j] < self._data[parent_idx]:
             self._swap(j, parent_idx)
             self._upheap(parent_idx)
 
@@ -45,10 +49,10 @@ class VertexHeap:
 
         right_idx = 2 * j + 2
         if right_idx < len(self._data):
-            if self._data[right_idx].name < self._data[left_idx].name:
+            if self._data[right_idx] < self._data[left_idx]:
                 smallest_child = right_idx
 
-        if self._data[smallest_child].name < self._data[j].name:
+        if self._data[smallest_child] < self._data[j]:
             self._swap(j, smallest_child)
             self._downheap(smallest_child)
 
@@ -120,38 +124,37 @@ def edit_matkul(matkul: str, *deps: str):
 
 
 def print_sorted() -> None:
+    leveled = VertexHeap([])
     for v in vertexes.values():
-        v.state = 0
-        v.level = -1
-
-    def visit(u: Vertex, level: int):
-        u.level = level
-        u.state = 1
-
-        for adj_v in outside[u]:
-            if adj_v.state == 0 or adj_v.level < level + 1:
-                visit(adj_v, level + 1)
-
-        u.state = 2
-
-    for v in vertexes.values():
-        if v.state == 0:
-            visit(v, 1)
-
-    leveled: list[VertexHeap] = []
-    for v in vertexes.values():
-        if len(leveled) < v.level:
-            leveled.append(VertexHeap([v]))
+        if len(inside[v]) ==0:
+            v.seen = True
+            v.level = 1
+            leveled.append(v)
         else:
-            arr = leveled[v.level - 1]
-            arr.append(v)
+            v.seen = False
+            v.level = -1
+
+    def visit(u: Vertex):
+        u.seen = True
+
+        max_level = 1
+        for adj_v in inside[u]:
+            if not adj_v.seen:
+                visit(adj_v)
+            
+            max_level = max(max_level, adj_v.level)
+        
+        u.level = max_level + 1
+        leveled.append(u)
+
+
+    for v in vertexes.values():
+        if not v.seen:
+            visit(v)
 
     print(
         ", ".join(
-            map(
-                lambda x: ", ".join([x.pop().name for _ in range(len(x))]),
-                leveled,
-            )
+            [leveled.pop().name for _ in range(len(vertexes))],
         )
     )
 
