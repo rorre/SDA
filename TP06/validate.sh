@@ -1,8 +1,7 @@
-mkdir -p tc/out
+mkdir -p tc/out2
 
-for i in {0..100}
+for i in {0..50}
 do
     echo "Running $i"
-    time (cat tc/in/in$i.txt | python tp06.py > tc/out/out$i.txt)
-    echo "-------------"
+    time (cat tc/in/in$i.txt | python tp06.py > tc/out2/out$i.txt)
 done
