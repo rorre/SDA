@@ -12,10 +12,12 @@ class Vertex:
         self.name = name
         self.level = -1
         self.seen = False
-    
+
     def __lt__(self, other: object):
         if isinstance(other, Vertex):
-            return self.level < other.level or (self.level == other.level and self.name <other.name )
+            return self.level < other.level or (
+                self.level == other.level and self.name < other.name
+            )
 
     def __hash__(self) -> int:
         return hash(id(self))
@@ -126,7 +128,7 @@ def edit_matkul(matkul: str, *deps: str):
 def print_sorted() -> None:
     leveled = VertexHeap([])
     for v in vertexes.values():
-        if len(inside[v]) ==0:
+        if len(inside[v]) == 0:
             v.seen = True
             v.level = 1
             leveled.append(v)
@@ -141,12 +143,11 @@ def print_sorted() -> None:
         for adj_v in inside[u]:
             if not adj_v.seen:
                 visit(adj_v)
-            
+
             max_level = max(max_level, adj_v.level)
-        
+
         u.level = max_level + 1
         leveled.append(u)
-
 
     for v in vertexes.values():
         if not v.seen:
