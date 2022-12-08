@@ -195,15 +195,6 @@ func PrintSorted() {
 	fmt.Println(strings.Join(sorted, ", "))
 }
 
-func PrintVars() {
-	for k, v := range inside {
-		fmt.Println("[IN] ", k, "value is", v)
-	}
-	for k, v := range outside {
-		fmt.Println("[OU] ", k, "value is", v)
-	}
-}
-
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
@@ -222,8 +213,6 @@ func main() {
 			EditMatkul(args[0], args[1:]...)
 		case "CETAK_URUTAN":
 			PrintSorted()
-		case "PRINT":
-			PrintVars()
 		default:
 			fmt.Println("Perintah tidak ditemukan")
 		}
