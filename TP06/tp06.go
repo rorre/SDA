@@ -9,9 +9,13 @@ import (
 )
 
 type Vertex struct {
-	name  string
-	level int
-	state bool
+	name    string
+	level   int
+	visited bool
+}
+
+func VertexCompare(u *Vertex, v *Vertex) bool {
+	return u.level < v.level || (u.level == v.level && u.name < v.name)
 }
 
 type VertexHeap []*Vertex
@@ -27,7 +31,7 @@ func (h VertexHeap) swap(i int, j int) {
 
 func (h VertexHeap) upheap(j int) {
 	parentIdx := (j - 1) >> 1
-	if j > 0 && h[j].name < h[parentIdx].name {
+	if j > 0 && VertexCompare(h[j], h[parentIdx]) {
 		h.swap(j, parentIdx)
 		h.upheap(parentIdx)
 	}
@@ -42,11 +46,11 @@ func (h VertexHeap) downheap(j int) {
 	smallestChildIdx := leftIdx
 
 	rightIdx := 2*j + 2
-	if rightIdx < len(h) && h[rightIdx].name < h[leftIdx].name {
+	if rightIdx < len(h) && VertexCompare(h[rightIdx], h[leftIdx]) {
 		smallestChildIdx = rightIdx
 	}
 
-	if h[smallestChildIdx].name < h[j].name {
+	if VertexCompare(h[smallestChildIdx], h[j]) {
 		h.swap(j, smallestChildIdx)
 		h.downheap(smallestChildIdx)
 	}
@@ -85,7 +89,7 @@ func AddEdge(source *Vertex, target *Vertex) {
 	inside[target] = append(inside[target], source)
 }
 
-func RemoveElement[T comparable](l []T, item T) []T {
+func RemoveElement(l []*Vertex, item *Vertex) []*Vertex {
 	for i, other := range l {
 		if other == item {
 			return append(l[:i], l[i+1:]...)
@@ -101,13 +105,13 @@ func RemoveEdge(source *Vertex, target *Vertex) {
 
 func AddMatkul(matkul string, deps ...string) {
 	if _, ok := vertexesMap[matkul]; ok {
-		fmt.Printf("Matkul %s sudah ada", matkul)
+		fmt.Printf("Matkul %s sudah ada\n", matkul)
 		return
 	}
 
 	for _, dep := range deps {
 		if _, ok := vertexesMap[dep]; !ok {
-			fmt.Printf("Matkul %s tidak ditemukan", dep)
+			fmt.Printf("Matkul %s tidak ditemukan\n", dep)
 			return
 		}
 	}
@@ -121,13 +125,13 @@ func AddMatkul(matkul string, deps ...string) {
 
 func EditMatkul(matkul string, deps ...string) {
 	if _, ok := vertexesMap[matkul]; !ok {
-		fmt.Printf("Matkul %s tidak ditemukan", matkul)
+		fmt.Printf("Matkul %s tidak ditemukan\n", matkul)
 		return
 	}
 
 	for _, dep := range deps {
 		if _, ok := vertexesMap[dep]; !ok {
-			fmt.Printf("Matkul %s tidak ditemukan", dep)
+			fmt.Printf("Matkul %s tidak ditemukan\n", dep)
 			return
 		}
 	}
@@ -146,44 +150,46 @@ func EditMatkul(matkul string, deps ...string) {
 	}
 }
 
-func VisitVertex(v *Vertex, level int) {
-	v.state = true
-	v.level = level
+func VisitVertex(v *Vertex) {
+	v.visited = true
 
-	for _, adjV := range outside[v] {
-		if !adjV.state || adjV.level < level+1 {
-			VisitVertex(adjV, level+1)
+	level := 1
+	for _, adjV := range inside[v] {
+		if !adjV.visited {
+			VisitVertex(adjV)
+		}
+
+		if adjV.level > level {
+			level = adjV.level
 		}
 	}
+	v.level = level + 1
 }
 
 func PrintSorted() {
+	leveledHeap := VertexHeap{}
 	for _, k := range vertexes {
-		k.state = false
-		k.level = -1
+		if len(inside[k]) == 0 {
+			k.visited = true
+			k.level = 1
+		} else {
+			k.visited = false
+			k.level = -1
+		}
 	}
 
 	for _, v := range vertexes {
-		if !v.state {
-			VisitVertex(v, 1)
+		if !v.visited {
+			VisitVertex(v)
 		}
-	}
-
-	leveled := make([]VertexHeap, 0)
-	for _, k := range vertexes {
-		if len(leveled) < k.level {
-			leveled = append(leveled, VertexHeap{k})
-		} else {
-			leveled[k.level-1].Append(k)
-		}
+		leveledHeap.Append(v)
 	}
 
 	sorted := make([]string, 0)
-	for _, levelArr := range leveled {
-		for range levelArr {
-			matkul, _ := levelArr.Pop()
-			sorted = append(sorted, matkul.name)
-		}
+	totalElem := len(leveledHeap)
+	for i := 0; i < totalElem; i++ {
+		matkul, _ := leveledHeap.Pop()
+		sorted = append(sorted, matkul.name)
 	}
 
 	fmt.Println(strings.Join(sorted, ", "))
@@ -201,7 +207,7 @@ func PrintVars() {
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		currentLine := scanner.Text()
+		currentLine := strings.TrimSpace(scanner.Text())
 		if currentLine == "EXIT" {
 			break
 		}
